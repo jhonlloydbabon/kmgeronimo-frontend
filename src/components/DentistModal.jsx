@@ -1,142 +1,182 @@
 import axios from 'axios';
-import React,{useState} from 'react';
+import React, { useState } from 'react';
+import { toastHandler } from '../ToastHandler';
+import { ToastContainer } from 'react-toastify';
 
-function DenstistModal({show, setModal}) {
-  const [ dentistInfo, setDentistInfo ] = useState({
-    fullname:"",
-    birthday:"",
-    address:"",
-    gender:"",
-    contactNumber:"",
-    email:"",
-    specialty:"",
-    username:"",
-    password:"",
-    confirmPassword:""
+function DenstistModal({ show, setModal }) {
+  const [dentistInfo, setDentistInfo] = useState({
+    fullname: "",
+    birthday: "",
+    address: "",
+    gender: "",
+    contactNumber: "",
+    email: "",
+    specialty: "",
+    username: "",
+    password: "",
+    confirmPassword: ""
   });
+
   const [profile, setProfile] = useState("");
 
-  const handleFormChange = (e) =>{
+  const handleFormChange = (e) => {
     setDentistInfo({
       ...dentistInfo,
       [e.target.name]: e.target.value
     })
   }
 
-  const handleProfile = (e) =>{
+  const handleProfile = (e) => {
     const reader = new FileReader();
-    if(e.target.files[0]){
+    if (e.target.files[0]) {
       reader.readAsDataURL(e.target.files[0]);
-      reader.onload = e =>{
+      reader.onload = e => {
         setProfile(e.target.result);
       }
     }
   }
 
-  const submitData = async(data) =>{
-    try{
-      const response = await axios.post("http://localhost:8080/api/v1/dentist/register",data,{
+  const submitData = async (data) => {
+    try {
+      const response = await axios.post("http://localhost:8080/api/v1/dentist/register", data, {
         headers: { Accept: "application/json", }
       });
-      if(response.data){
-        alert(response.data.message);
+      if (response.data) {
+        toastHandler("success", "Account created!");
         window.location.reload();
       }
-    }catch(err){
-      console.log(err);
-    };
+    } catch (err) { console.log(err); };
   }
-  const isOver18 = (dob) =>{
+
+  const isOver18 = (dob) => {
     const birthday = new Date(dob);
-    const ageDiff = Date.now() - birthday.getTime();
-    const ageDate = new Date(ageDiff);
-    const age = Math.abs(ageDate.getUTCFullYear-1970);
-    return age < 18;
-  }
-  const btnSubmit = () =>{
-    if(!dentistInfo.fullname || !dentistInfo.birthday || !dentistInfo.address || !dentistInfo.gender || !dentistInfo.contactNumber || !dentistInfo.email || !dentistInfo.specialty || !dentistInfo.username || !dentistInfo.password || !dentistInfo.confirmPassword || !profile){
-      return alert("Fill up empty field!");
-    }
-    if(dentistInfo.password !== dentistInfo.confirmPassword ){
-      return alert("Mismatch password and confirmpassword");
-    }
-    const isLegalAge = isOver18(dentistInfo.birthday);
-    if(isLegalAge) return alert("Invalid Age!");
+    const currentDate = new Date();
+    const age = currentDate.getFullYear() - birthday.getFullYear();
+    return age >= 18;
+  };
 
-    const regex = /^09\d{9}$/;
-    if(!regex.test(dentistInfo.contactNumber)){
-      return alert("Contact number must be 11-digit");
+  const btnSubmit = () => {
+    const validateForm = () => {
+      const isLegalAge = isOver18(dentistInfo.birthday);
+
+      if (!dentistInfo.fullname || !dentistInfo.birthday || !dentistInfo.address || !dentistInfo.gender || !dentistInfo.contactNumber || !dentistInfo.email || !dentistInfo.specialty || !dentistInfo.username || !dentistInfo.password || !dentistInfo.confirmPassword || !profile) {
+        toastHandler("error", "Please fill up all empty fields");
+        return false;
+      }
+
+      if (dentistInfo.password !== dentistInfo.confirmPassword) {
+        toastHandler("error", "Mismatch password and confirm password");
+        return false;
+      }
+
+      if (isLegalAge === false) {
+        toastHandler("error", "18 years old and up only");
+        return false;
+      }
+
+      const regex = /^09\d{9}$/;
+      if (!regex.test(dentistInfo.contactNumber)) {
+        toastHandler("error", "Contact number must be 11-digit and must start with 09");
+        return false;
+      }
+
+      if (!dentistInfo.email.includes("@")) {
+        toastHandler("error", "Email address must have @");
+        return false;
+      }
+
+      return true;
     }
 
-    const data = { ...dentistInfo, profile };
-    submitData(data);
+    const submitForm = () => {
+      const data = { ...dentistInfo, profile };
+      submitData(data);
+    }
+
+    if (validateForm()) {
+      submitForm();
+    }
   }
 
   return (
-    <div className={` w-full h-screen bg-gray-900 bg-opacity-75 absolute top-0 z-40 flex flex-grow justify-center items-center ${show ? '': 'hidden'}`}>
-        <div className=" z-50">
-          <div className="m-auto w-[550px] h-auto p-8 bg-white rounded-lg shadow-lg">
-            <div className="text-left py-4">
-              <h2 className="text-xl font-bold mb-2">Add Dentist</h2>
-              <hr />
+    <div className={`w-full h-screen bg-modal bg-opacity-75 absolute top-0 z-40 flex flex-grow justify-center items-center ${show ? '' : 'hidden'}`}>
+      <div className=" z-50">
+        <div className="m-auto w-[550px] h-auto p-8 bg-white rounded-lg shadow-lg">
+          <div className="text-left py-2 mb-2 border-b-2 border-b-light-gray">
+            <h2 className="text-xl font-bold mb-2">Add Dentist</h2>
+          </div>
+
+          <ToastContainer limit={1} autoClose={1500} />
+
+          <form action="post" className='grid grid-cols-2 gap-3 ' >
+            <div className='flex flex-col'>
+              <label className='text-dark-gray font-medium' htmlFor="fullname">Full Name</label>
+              <input id="fullname" type="text" name="fullname"  value={dentistInfo.fullname} placeholder='ex. John Dimaguiba' className='px-4 py-2 text-sm outline-none border-light-gray border focus:shadow-md focus:border-primary rounded-md' onChange={(e) => handleFormChange(e)} />
             </div>
 
-            <form action="post" className='grid grid-cols-2 gap-3 ' >
-              <div className='flex flex-col'>
-                <label htmlFor="fullname">Fullname</label>
-                <input type="text" name="fullname" value={dentistInfo.fullname} placeholder='ex. John Dimaguiba' className=' px-4 py-2 text-sm focus:outline-none focus:shadow-md border ' onChange={(e)=>handleFormChange(e)} />
-              </div>
-              <div className='flex flex-col'>
-                <label htmlFor="birthday">Birthday</label>
-                <input type="date" name="birthday" value={dentistInfo.birthday} className=' px-4 py-2 text-sm focus:outline-none focus:shadow-md border ' onChange={(e)=>handleFormChange(e)}/>
-              </div>
-              <div className='flex flex-col'>
-                <label htmlFor="address">Address</label>
-                <input type="text" name="address" value={dentistInfo.address} placeholder='ex. 123 Sesame St., Malabon City' className=' px-4 py-2 text-sm  focus:outline-none focus:shadow-md border ' onChange={(e)=>handleFormChange(e)}/>
-              </div>
-              <div className='flex flex-col'>
-                <label htmlFor="gender">Gender</label>
-                <select name="gender" value={dentistInfo.gender} className='px-4 py-2 text-sm focus:outline-none focus:shadow-md border' onChange={(e)=>handleFormChange(e)}>
-                  <option value="male" >Male</option>
-                  <option value="female">Female</option>
-                </select>
-              </div>
-              <div className='flex flex-col'>
-                <label htmlFor="contactNumber">Contact Number</label>
-                <input type="text" name="contactNumber" value={dentistInfo.contactNumber} placeholder='ex. 09123456780' className=' px-4 py-2 text-sm focus:outline-none focus:shadow-md border ' onChange={(e)=>handleFormChange(e)}/>
-              </div>
-              <div className='flex flex-col'>
-                <label htmlFor="email">Email</label>
-                <input type="email" name="email" value={dentistInfo.email} className=' text-sm px-4 py-2 focus:outline-none focus:shadow-md border ' placeholder='ex. john@email.com' onChange={(e)=>handleFormChange(e)}/>
-              </div>
-              <div className='flex flex-col'>
-                <label htmlFor="specialty">Doctor Specialty</label>
-                <input type="text" name="specialty" value={dentistInfo.specialty} placeholder='ex. Oral surgery' className=' px-4 py-2 text-sm focus:outline-none focus:shadow-md border ' onChange={(e)=>handleFormChange(e)}/>
-              </div>
-              <div className='flex flex-col'>
-                <label htmlFor="username">Username</label>
-                <input type="text" name="username" value={dentistInfo.username} className=' text-sm px-4 py-2 focus:outline-none focus:shadow-md border ' onChange={(e)=>handleFormChange(e)}/>
-              </div>
-              <div className='flex flex-col'>
-                <label htmlFor="password">Password</label>
-                <input type="password" name="password" value={dentistInfo.password} className=' px-4 py-2 text-sm focus:outline-none focus:shadow-md border ' onChange={(e)=>handleFormChange(e)}/>
-              </div>
-              <div className='flex flex-col'>
-                <label htmlFor="confirmPassword">Confirm Password</label>
-                <input type="password" name="confirmPassword" value={dentistInfo.confirmPassword} className=' text-sm px-4 py-2 focus:outline-none focus:shadow-md border ' onChange={(e)=>handleFormChange(e)}/>
-              </div>
-              <div className='flex flex-col'>
-                <label htmlFor="file">Upload</label>
-                <input type="file" name="profile" className=' text-sm py-2 focus:outline-none focus:shadow-md  ' onChange={(e)=>handleProfile(e)}/>
-              </div>
-            </form>
-            <hr/>
-            <div className='mt-3 flex justify-end gap-2'>
-              <button className='px-10 py-2 bg-gray-400 text-white rounded-md hover:shadow-lg' onClick={()=>setModal(false)}>Close</button>
-              <button className='px-10 py-2 bg-cyan-500 text-white rounded-md hover:shadow-lg' onClick={btnSubmit} >Save</button>
+            <div className='flex flex-col'>
+              <label className='text-dark-gray font-medium' htmlFor="birthday">Birthday</label>
+              <input id='birthday' type="date" name="birthday" value={dentistInfo.birthday} className='px-4 py-2 text-sm outline-none border-light-gray border focus:shadow-md focus:border-primary rounded-md' onChange={(e) => handleFormChange(e)} />
             </div>
+
+            <div className='flex flex-col'>
+              <label className='text-dark-gray font-medium' htmlFor="address">Address</label>
+              <input id='address' type="text" name="address" value={dentistInfo.address} placeholder='ex. 123 Sesame St., Malabon City' className='px-4 py-2 text-sm outline-none border-light-gray border focus:shadow-md focus:border-primary rounded-md ' onChange={(e) => handleFormChange(e)} />
+            </div>
+            
+            <div className='flex flex-col'>
+              <label className='text-dark-gray font-medium' htmlFor="gender">Gender</label>
+              <select id='gender' name="gender" value={dentistInfo.gender} className='px-4 py-2 text-sm outline-none border-light-gray border focus:shadow-md focus:border-primary rounded-md' onChange={(e) => handleFormChange(e)}>
+                <option value="" hidden >Choose...</option>
+                <option value="male" >Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+
+            <div className='flex flex-col'>
+              <label className='text-dark-gray font-medium' htmlFor="contactNumber">Contact Number</label>
+              <input id='contactNumber' type="text" name="contactNumber" maxLength={11} value={dentistInfo.contactNumber} placeholder='ex. 09123456780' className='px-4 py-2 text-sm outline-none border-light-gray border focus:shadow-md focus:border-primary rounded-md' onChange={(e) => handleFormChange(e)} />
+            </div>
+            <div className='flex flex-col'>
+              <label className='text-dark-gray font-medium' htmlFor="email">Email</label>
+              <input id='email' type="email" name="email" value={dentistInfo.email} className='px-4 py-2 text-sm outline-none border-light-gray border focus:shadow-md focus:border-primary rounded-md' placeholder='ex. john@email.com' onChange={(e) => handleFormChange(e)} />
+            </div>
+
+            <div className='flex flex-col'>
+              <label className='text-dark-gray font-medium' htmlFor="specialty">Doctor Specialty</label>
+              <input id='specialty' type="text" name="specialty" value={dentistInfo.specialty} placeholder='ex. Oral surgery' className='px-4 py-2 text-sm outline-none border-light-gray border focus:shadow-md focus:border-primary rounded-md' onChange={(e) => handleFormChange(e)} />
+            </div>
+
+            <div className='flex flex-col'>
+              <label className='text-dark-gray font-medium' htmlFor="username">Username</label>
+              <input id='username' type="text" name="username" value={dentistInfo.username} className='px-4 py-2 text-sm outline-none border-light-gray border focus:shadow-md focus:border-primary rounded-md' onChange={(e) => handleFormChange(e)} />
+            </div>
+
+            <div className='flex flex-col'>
+              <label className='text-dark-gray font-medium' htmlFor="password">Password</label>
+              <input id='password' type="password" name="password" value={dentistInfo.password} className='px-4 py-2 text-sm outline-none border-light-gray border focus:shadow-md focus:border-primary rounded-md' onChange={(e) => handleFormChange(e)} />
+            </div>
+
+            <div className='flex flex-col'>
+              <label className='text-dark-gray font-medium' htmlFor="confirmPassword">Confirm Password</label>
+              <input id='confirmPassword' type="password" name="confirmPassword" value={dentistInfo.confirmPassword} className='px-4 py-2 text-sm outline-none border-light-gray border focus:shadow-md focus:border-primary rounded-md' onChange={(e) => handleFormChange(e)} />
+            </div>
+
+            <div className="flex my-3 flex-col gap-2">
+            <p className='text-dark-gray font-medium' htmlFor="picture">Picture</p>
+              <label class="text-sm">
+                <span class="sr-only">Choose profile photo</span>
+                <input type="file" name="profile" accept='image/*' onChange={handleProfile} class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-secondary hover:file:bg-subprimary" />
+              </label>
+            </div>
+          </form>
+
+          <div className='mt-2 pt-4 flex justify-end gap-2 border-t-2 border-t-light-gray'>
+            <button className='px-6 py-2 bg-green text-white rounded-md hover:shadow-lg' onClick={btnSubmit}>Add</button>
+            <button className='px-8 py-2 bg-red text-white rounded-md hover:shadow-lg' onClick={() => setModal(false)}>Cancel</button>
           </div>
         </div>
+      </div>
     </div>
   )
 }

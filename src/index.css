@@ -1,3 +1,36 @@
+@font-face {
+    font-family: 'Poppins';
+    src: url('../src/assets/fonts/Poppins-Regular.ttf') format('truetype');
+}
+
+body, html {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* For Firefox Browser */
+.scrollbar {
+    scrollbar-width: thin;
+    
+    scrollbar-color: #000 #F9F8FD;
+  }
+  
+  
+  /* For Chrome, EDGE, Opera, Others */
+  .scrollbar::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  .scrollbar::-webkit-scrollbar-track { 
+    background: #F9F8FD;
+    border-radius: 8px; /* Rounded border */
+  }
+  
+  .scrollbar::-webkit-scrollbar-thumb { 
+    background: #8795a1;
+    border-radius: 8px; /* Rounded border */
+  }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
