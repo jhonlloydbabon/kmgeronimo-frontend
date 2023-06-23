@@ -6,18 +6,18 @@ import { AiFillFilePdf } from 'react-icons/ai';
 import DentistPDFFile from './DentistPDFFile';
 // import LoadingSpinner from './LoadingSpinner';
 
-function PDFButton({data, type}) {
+function PDFButton({ data, type }) {
   return (
     <PDFDownloadLink document={
       type === "dentist" ? <DentistPDFFile data={data} />
-      :<PDFFile data={data} />
+        : <PDFFile data={data} />
     } fileName={
       type === "dentist" ?
-      "dentist-reports"
-      :"patients-reports"
+        "dentist-reports"
+        : "patients-reports"
     }>
       <FileIcons Icon={AiFillFilePdf} title={"PDF"} />
-        {/* {
+      {/* {
             ({loading})=>{
                 !loading ? (
                   <LoadingSpinner loading={loading} />  
@@ -26,7 +26,7 @@ function PDFButton({data, type}) {
                 )
             }
         } */}
-    </PDFDownloadLink>
+    </PDFDownloadLink >
   )
 }
 
